@@ -1,0 +1,237 @@
+#!/bin/bash
+#liujie PSOP
+
+#Start脚本标准流程：
+#1、检查进程是否存在，如已存在，返回AOS_ERR_STARTED
+#2、启动模块，如果启动过程中出现问题（无权限、缺少文件、超时），返回对应的错误码
+#3、循环调用healthcheck，直到返回AOS_OK或AOS_ERR_NOT_WORKING或超时,将healthchenck脚本的返回值返回
+function start
+{
+	#### <step 1> ####
+	check_proc_exist "${PROC_NAME}"
+	RET=$?
+	if [ ${RET} == ${OK} ];then
+		return ${AOS_ERR_STARTED}
+	fi
+
+	#### <step 2> ####
+	#check the file access that started by command
+	#to make sure the command below can run normally
+	if [ ! -d ${BIN_DIR} ];then
+		return ${AOS_ERR_FILE_NOTFOUND}
+	elif [ ! -f ${BIN_DIR}/${PROC_NAME} ];then
+		return ${AOS_ERR_FILE_NOTFOUND}
+	elif [ ! -x ${BIN_DIR}/${PROC_NAME} ];then
+		return ${AOS_ERR_ACCESS}
+	elif [ ! -d ${STA_DIR} -o ! -d ${CNF_DIR} ];then
+		return ${AOS_ERR_FILE_NOTFOUND}
+	elif [ ! -f ${CNF_DIR}/${PROC_CONF} ];then
+		return ${AOS_ERR_FILE_NOTFOUND}
+	fi
+
+	cd ${TOP_PATH}
+	${START_COMMAND} &>${LOG_DIR}/${CONTROL_LOG} &
+	RET=$?
+	cd - 1>/dev/null
+
+	if [ ${RET} != ${OK} ];then
+		return ${AOS_ERR_FAILED_OPERATION}
+	fi
+
+	##update in 08.12.23
+	sleep 1
+	##update end
+
+	#### <step 3> ####
+	WAIT_TIME=0
+	while [ 1 ]
+	do
+		#time out
+		if [ ${WAIT_TIME} -gt ${MAX_HEC_TME} ];then
+			return ${AOS_ERR_TIMEOUT}
+		fi
+		((WAIT_TIME++))
+
+		#healthcheck until "AOS_OK" or "AOS_ERR_NOT_WORKING"
+		healthcheck;
+		RET=$?
+		
+		if [ ${RET} == ${AOS_ERR_FAILED_OPERATION} ];then
+			sleep 1
+			continue
+		elif [ ${RET} == ${AOS_ERR_NOT_WORKING} ];then
+			return ${AOS_ERR_NOT_WORKING}
+		elif [ ${RET} == ${AOS_OK} ];then
+			return ${AOS_OK}	
+		fi
+	done
+}
+
+#Stop脚本标准流程：
+#1、检查进程是否存在，如不存在，返回AOS_ERR_NOT_STARTED
+#2、停止模块，如果停止过程中出现问题（无权限、缺少文件、超时），返回对应的错误码
+#3、检查模块进程是否存在，如仍存在，返回AOS_ERR_FAILED_OPERATION
+#4、进行该模块的额外检查，如有问题，返回AOS_ERR_FAILED_OPERATION
+#5、返回AOS_OK
+function stop
+{
+	#### <step 1> ####
+	check_proc_exist "${PROC_NAME}"
+	RET=$?
+	if [ ${RET} != ${OK} ];then
+	    return ${AOS_ERR_NOT_STARTED}
+	fi
+
+	#### <step 2> ####
+	${STOP_COMMAND}
+	sleep ${MAX_WAT_TME}
+
+	#### <step 3> ####
+	check_proc_exist "${PROC_NAME}"
+	RET=$?
+	if [ ${RET} == ${OK} ];then
+		return ${AOS_ERR_FAILED_OPERATION}
+	fi
+
+	#### <step 5> ####
+	return ${AOS_OK}
+}
+
+#Restart脚本标准流程A：
+#1、调用stop脚本，如未返回AOS_OK，则将该脚本的返回值返回
+#2、调用start脚本，将该脚本的返回值返回
+function restart
+{
+
+#### <step 1> ####
+stop;
+RET=$?
+if [ ${RET} != ${OK} ];then
+	return ${RET}
+fi
+
+#### <step 2> ####
+start;
+RET=$?
+return ${RET}
+}
+
+#Cleanup脚本标准流程：
+#1、清理资源，如果清理过程中出现问题（无权限、缺少文件、超时），返回对应的错误码
+#2、检查模块进程是否存在，如仍存在，返回AOS_ERR_FAILED_OPERATION
+#3、进行该模块的额外检查，如有问题，返回AOS_ERR_FAILED_OPERATION
+#4、返回AOS_OK
+function cleanup
+{
+	#### <step 1> ####
+	${STOP_COMMAND}
+	sleep ${MAX_WAT_TME}
+
+	#### <step 2> ####
+	check_proc_exist "${PROC_NAME}"
+	RET=$?
+	if [ ${RET} == ${OK} ];then
+	    return ${AOS_ERR_FAILED_OPERATION}
+	fi
+
+	#### <step 4> ####
+	return ${AOS_OK}
+}
+
+#Healthcheck脚本标准流程：
+#1、检查（监听某端口的）进程是否存在，如不存在，返回AOS_ERR_FAILED_OPERATION
+#2、检查线程数是否大于指定值，如不满足，返回AOS_ERR_FAILED_OPERATION
+#3、进行该模块的特性检查，如有问题，返回AOS_ERR_FAILED_OPERATION
+#4、检查日志是否正常滚动，如不滚动，返回AOS_ERR_NOT_WORKING
+#5、返回AOS_OK
+
+function healthcheck
+{
+	#### <step 1> ####
+	if [ "${CHK_PROC_EXIST}" == "1" ];then
+		check_proc_exist "${PROC_NAME}"
+		RET=$?
+		if [ ${RET} != ${OK} ];then
+		    return ${AOS_ERR_FAILED_OPERATION}
+		fi
+	fi
+
+	#### <step 2> ####
+	if [ "${CHK_PROC_NUM}" == "1" ];then
+		check_proc_num "${PROC_NAME}" "${TRD_NUM}"
+		RET=$?
+		if [ ${RET} != ${OK} ];then
+			return ${AOS_ERR_FAILED_OPERATION}
+		fi
+	fi
+
+	#### <step 4> ####
+	if [ "${CHK_LOG_ROLL}" == "1" ];then
+		#重新加载control.conf, 减少日志检查失败的情况
+		include_path=`dirname $0`
+		source ${include_path}/../conf/control.conf || return ${AOS_ERR_FILE_NOTFOUND}
+		unset include_path
+		check_log_roll "${LOG_DIR}/${PROC_LOG}" ${LOG_CHK_TME}
+		RET=$?
+		if [ ${RET} != ${OK} ];then
+			return ${AOS_ERR_NOT_WORKING}
+		fi
+	fi
+
+	#### <step 5> ####
+	return ${AOS_OK}
+}
+
+#Reload脚本标准流程B：
+#1、检查进程是否存在，如不存在，返回AOS_ERR_NOT_STARTED
+#2、重载配置，如果重载过程中出现问题（无权限、缺少文件、超时），返回对应的错误码
+#3、循环调用healthcheck，直到返回AOS_OK或AOS_ERR_NOT_WORKING或超时,将healthchenck脚本的返回值返回
+function reload
+{
+	RELOAD="$*"
+	#### <step 1> ####
+	check_proc_exist "${PROC_NAME}"
+	RET=$?
+	if [ ${RET} != ${OK} ];then
+		return ${AOS_ERR_NOT_STARTED}
+	fi
+
+	#### <step 2> ####
+	cd ${TOP_PATH}
+	${BIN_DIR}/${PROC_RELOAD_NAME} ${RELOAD} &>${LOG_DIR}/${CONTROL_LOG}
+	RET=$?
+	cd - 1>/dev/null
+
+	if [ ${RET} != "48" ];then
+	#48 is ascII code of string "0"
+		return ${AOS_ERR_FAILED_OPERATION}
+	fi
+
+	##update in 08.12.23
+	sleep 5
+	##update end
+
+	#### <step 3> ####
+	WAIT_TIME=0
+	while [ 1 ]
+	do
+		#time out
+		if [ ${WAIT_TIME} -gt ${MAX_HEC_TME} ];then
+			return ${AOS_ERR_TIMEOUT}
+		fi
+		((WAIT_TIME++))
+
+		#healthcheck until "AOS_OK" or "AOS_ERR_NOT_WORKING"
+		healthcheck;
+		RET=$?
+
+		if [ ${RET} == ${AOS_ERR_FAILED_OPERATION} ];then
+			sleep 1
+			continue
+		elif [ ${RET} == ${AOS_ERR_NOT_WORKING} ];then
+			return ${AOS_ERR_NOT_WORKING}
+		elif [ ${RET} == ${AOS_OK} ];then
+			return ${AOS_OK}
+		fi
+	done
+}

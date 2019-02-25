@@ -1,0 +1,179 @@
+{
+  "dialog": {
+    "intents": [
+      {
+        "name": "PlanMyTrip",
+        "confirmationRequired": false,
+        "prompts": {
+          "confirmation": "Confirm.Intent.537103921542"
+        },
+        "slots": [
+          {
+            "name": "travelDate",
+            "type": "ROSAI.DATE",
+            "confirmationRequired": false,
+            "elicitationRequired": true,
+            "prompts": {
+              "confirmation": "Confirm.Slot.537103921542.444738461149",
+              "elicitation": "Elicit.Slot.537103921542.444738461149"
+            }
+          },
+          {
+            "name": "toCity",
+            "type": "ROSAI.US_CITY",
+            "confirmationRequired": false,
+            "elicitationRequired": true,
+            "prompts": {
+              "confirmation": "Confirm.Slot.537103921542.65633857286",
+              "elicitation": "Elicit.Slot.537103921542.65633857286"
+            }
+          },
+          {
+            "name": "fromCity",
+            "type": "ROSAI.US_CITY",
+            "confirmationRequired": false,
+            "elicitationRequired": true,
+            "prompts": {
+              "confirmation": "Confirm.Slot.687272940939.1434633141366",
+              "elicitation": "Elicit.Slot.1159719883683.896729637610"
+            }
+          },
+          {
+            "name": "activity",
+            "type": "LIST_OF_ACTIVITIES",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          }
+        ]
+      },
+      {
+        "name": "PlanMyActivity",
+        "confirmationRequired": true,
+        "prompts": {
+          "confirmation": "Confirm.Intent.139871954650"
+        },
+        "slots": [
+          {
+            "name": "toCity",
+            "type": "ROSAI.US_CITY",
+            "confirmationRequired": false,
+            "elicitationRequired": true,
+            "prompts": {
+              "elicitation": "Elicit.Slot.139871954650.1434105633878"
+            }
+          },
+          {
+            "name": "actions",
+            "type": "LIST_OF_ACTIVITIES",
+            "confirmationRequired": false,
+            "elicitationRequired": true,
+            "prompts": {
+              "elicitation": "Elicit.Slot.139871954650.747313745259"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "prompts": [
+    {
+      "id": "Elicit.Slot.1159719883683.896729637610",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "From where did you want to start your trip?"
+        },
+        {
+          "type": "PlainText",
+          "value": "Where are you starting your trip?"
+        },
+        {
+          "type": "PlainText",
+          "value": "What city are you leaving from?"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Slot.537103921542.65633857286",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Where are you traveling to?"
+        }
+      ]
+    },
+    {
+      "id": "Confirm.Slot.537103921542.65633857286",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Did you want to travel to {toCity} ?"
+        }
+      ]
+    },
+    {
+      "id": "Confirm.Slot.537103921542.444738461149",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "You're traveling on {travelDate} right?"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Slot.537103921542.444738461149",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "When did you want to travel?"
+        }
+      ]
+    },
+    {
+      "id": "Confirm.Intent.537103921542",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "I'm saving your trip from {fromCity} to {toCity} on {travelDate} . Is that OK?"
+        }
+      ]
+    },
+    {
+      "id": "Confirm.Slot.687272940939.1434633141366",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "You said you're leaving from {fromCity} , right?"
+        }
+      ]
+    },
+    {
+      "id": "Confirm.Intent.139871954650",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Are you want to {toCity} for {actions} ?"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Slot.139871954650.1434105633878",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Where are you going?"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Slot.139871954650.747313745259",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "what kind activity do you want to do?"
+        }
+      ]
+    }
+  ]
+}

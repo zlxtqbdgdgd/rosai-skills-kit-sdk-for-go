@@ -1,0 +1,28 @@
+{
+  "dialog": {
+    "intents": [
+      {
+        "name": "SearchTidePooler",
+        "confirmationRequired": false,
+        "prompts": {},
+        "slots": [
+          {
+            "name": "city",
+            "type": "ROSAI.CITY",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          },
+          {
+            "name": "date",
+            "type": "ROSAI.DATE",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          }
+        ]
+      }
+    ]
+  },
+  "prompts": []
+}

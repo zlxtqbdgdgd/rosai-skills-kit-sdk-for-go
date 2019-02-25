@@ -1,0 +1,63 @@
+{
+  "dialog": {
+    "intents": [
+      {
+        "name": "SearchOneDay",
+        "confirmationRequired": false,
+        "prompts": {},
+        "slots": [
+          {
+            "name": "city",
+            "type": "ROSAI.ZH_CITY",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          },
+          {
+            "name": "date",
+            "type": "ROSAI.DATE",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          },
+          {
+            "name": "focus",
+            "type": "LIST_OF_FOCUS",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          }
+        ]
+      },
+      {
+        "name": "SearchDays",
+        "confirmationRequired": false,
+        "prompts": {},
+        "slots": [
+          {
+            "name": "city",
+            "type": "ROSAI.ZH_CITY",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          },
+          {
+            "name": "duration",
+            "type": "ROSAI.DURATION",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          },
+          {
+            "name": "focus",
+            "type": "LIST_OF_FOCUS",
+            "confirmationRequired": false,
+            "elicitationRequired": false,
+            "prompts": {}
+          }
+        ]
+      }
+    ]
+  },
+  "prompts": []
+}

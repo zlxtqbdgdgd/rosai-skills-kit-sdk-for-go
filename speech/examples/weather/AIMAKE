@@ -1,0 +1,44 @@
+#!/bin/bash
+
+function make_staging() {
+  local target=$1_staging
+  rm -rf $target
+  mkdir $target $target/log $target/conf
+  cp bin/* $target
+  cp weather $target
+  cp -f conf/* $target/conf/
+  cp -f conf/.$1.app.json $target/conf/app.json
+  cp -rf tools/test  $target/
+}
+
+function checkparam()
+{
+  if  [ $# != 1 ] || \
+    [[ "$1" != "dev" && "$1" != "online" && "$1" != "test" ]];
+  then
+    return 0
+  fi
+  return 1
+}
+
+#start process
+checkparam $*
+if [ $? == 0 ]; then
+  echo "Usage: ./AIMAKE [dev|online|test] "
+  exit
+fi
+echo "check param ok"
+echo "start build rosai sdk planmytrip..."
+cd speech/examples/planmytrip
+#$GOROOT/bin/go build -a
+/home/jenkins/local/go/bin/go build -a
+#go build -a
+if [ $? -ne 0 ]; then
+   echo "build error"
+   exit 1
+fi
+echo "success to build rosai sdk planmytrip"
+echo "start make $1 staging..."
+make_staging $1
+echo "done to make staging."
+exit 0
